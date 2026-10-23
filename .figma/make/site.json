@@ -1,0 +1,11 @@
+{
+  "title": "Cybersecurity Perception Survey Questionnaire",
+  "description": "Explore 80 questions across eight themes covering enterprise security decisions from risk review to vendor renewal.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Research Cards video review</title>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; }
+      iframe { display: block; width: 100vw; height: 100vh; border: 0; }
+      .review-controls {
+        position: fixed;
+        z-index: 10;
+        right: 20px;
+        bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 10px 9px 16px;
+        border: 1px solid #dedede;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 8px 30px #1410161f;
+        color: #171717;
+        font-size: 13px;
+      }
+      .review-controls button {
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #f5f5f5;
+        color: #525252;
+        cursor: pointer;
+        font: inherit;
+      }
+      .review-controls button[aria-pressed="true"] { background: #171717; color: #fff; }
+      .review-controls button:focus-visible { outline: 2px solid #b01f24; outline-offset: 2px; }
+      @media (max-width: 600px) {
+        .review-controls { left: 12px; right: 12px; bottom: 12px; justify-content: center; }
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="page" src="/" title="Survey Questionnaire page with Research Cards hero"></iframe>
+    <div class="review-controls" role="group" aria-label="Compare Research Cards videos">
+      <span>Research Cards video</span>
+      <button id="current" type="button" aria-pressed="false">Previous</button>
+      <button id="v2" type="button" aria-pressed="true">Live V2</button>
+    </div>
+    <script>
+      const frame = document.getElementById('page')
+      const currentButton = document.getElementById('current')
+      const v2Button = document.getElementById('v2')
+      let version = 'v2'
+
+      function showVersion(next) {
+        version = next
+        currentButton.setAttribute('aria-pressed', String(next === 'current'))
+        v2Button.setAttribute('aria-pressed', String(next === 'v2'))
+        const documentInside = frame.contentDocument
+        const video = documentInside?.querySelector('.research-cards-media video')
+        const image = documentInside?.querySelector('.research-cards-media img')
+        const file = next === 'v2' ? 'research-cards-survey-v2' : 'research-cards-survey-loop'
+        const poster = next === 'v2' ? 'research-cards-survey-v2-poster.png' : 'research-cards-survey-poster.png'
+        if (video) {
+          video.pause()
+          video.poster = '/assets/' + poster + (next === 'v2' ? '?v=generic-1' : '')
+          video.querySelector('source').src = '/assets/' + file + '.mp4' + (next === 'v2' ? '?v=generic-1' : '')
+          video.load()
+          video.play().catch(() => {})
+        }
+        if (image) image.src = '/assets/' + poster + (next === 'v2' ? '?v=generic-1' : '')
+      }
+
+      currentButton.addEventListener('click', () => showVersion('current'))
+      v2Button.addEventListener('click', () => showVersion('v2'))
+      frame.addEventListener('load', () => {
+        setTimeout(() => {
+          frame.contentDocument.querySelectorAll('[aria-label="Hero appearance"] button')[1]?.click()
+          setTimeout(() => showVersion(version), 150)
+        }, 400)
+      })
+    </script>
+  </body>
+</html>

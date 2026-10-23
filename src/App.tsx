@@ -959,7 +959,7 @@ function SiteFooter() {
 }
 
 export default function App() {
-  const [heroAppearance, setHeroAppearance] = useState<HeroAppearance>("minimal")
+  const [heroAppearance, setHeroAppearance] = useState<HeroAppearance>("cards")
   const [pastHero, setPastHero] = useState(false)
   const [query, setQuery] = useState("")
   const [activeThemeId, setActiveThemeId] = useState<string | null>(cybersecurityThemes[0].id)

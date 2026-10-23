@@ -766,6 +766,10 @@
   padding-block: calc(var(--space-xl) + var(--space-2xs));
 }
 
+.survey-hero--cards .hero-inner {
+  padding-block: calc(var(--space-xl) + var(--space-xs));
+}
+
 .survey-hero--laptop .hero-copy,
 .survey-hero--cards .hero-copy {
   padding-inline: var(--space-md) 0;
@@ -2143,6 +2147,10 @@ mark {
   .survey-hero--cards .hero-inner {
     grid-template-columns: minmax(0, 1fr);
     padding-block: calc(var(--space-2xl) + var(--space-xs));
+  }
+
+  .survey-hero--cards .hero-inner {
+    padding-block: var(--space-2xl);
   }
 
   .survey-hero--laptop .hero-inner {

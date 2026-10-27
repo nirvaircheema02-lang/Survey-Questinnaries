@@ -339,11 +339,54 @@ function ConsultationCTA() {
   )
 }
 
-function MobileConsultationCTA() {
+function MobileActionDock({ visible, query, onQueryChange }: {
+  visible: boolean
+  query: string
+  onQueryChange: (value: string) => void
+}) {
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const searchButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (searchOpen && visible) searchRef.current?.focus()
+  }, [searchOpen, visible])
+
+  useEffect(() => {
+    if (!visible) setSearchOpen(false)
+  }, [visible])
+
+  const closeSearch = () => {
+    setSearchOpen(false)
+    window.requestAnimationFrame(() => searchButtonRef.current?.focus())
+  }
+
   return (
-    <aside className="mobile-consultation-cta" aria-label="Survey consultation">
-      <p>Need a tailored questionnaire?</p>
-      <ConsultationButton compact />
+    <aside className="mobile-action-dock" data-visible={visible} data-search-open={searchOpen} aria-label="Questionnaire actions" inert={!visible}>
+      {searchOpen ? (
+        <div className="mobile-action-dock__search" role="search" onKeyDown={(event) => {
+          if (event.key === "Escape") closeSearch()
+        }}>
+          <Search aria-hidden="true" size={19} />
+          <input
+            ref={searchRef}
+            type="search"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Search questions or answers"
+            aria-label="Search questions and answers across all tenets"
+          />
+          {query && <button type="button" className="mobile-action-dock__clear" aria-label="Clear search" onClick={() => onQueryChange("")}><X aria-hidden="true" size={17} /></button>}
+          <button type="button" className="mobile-action-dock__close" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
+        </div>
+      ) : (
+        <div className="mobile-action-dock__actions">
+          <button ref={searchButtonRef} type="button" className="mobile-action-dock__search-button" aria-label="Search questions" aria-expanded={false} onClick={() => setSearchOpen(true)}>
+            <Search aria-hidden="true" size={20} />
+          </button>
+          <ConsultationButton compact />
+        </div>
+      )}
     </aside>
   )
 }
@@ -864,7 +907,6 @@ function ResearchThemeSection({
           {resultCount} matching {resultCount === 1 ? "question" : "questions"} across {displayThemes.filter((item) => item.matches.length > 0).length} {displayThemes.filter((item) => item.matches.length > 0).length === 1 ? "tenet" : "tenets"}
         </p>
       )}
-      <MobileConsultationCTA />
         <div className="theme-accordion" hidden={resultCount === 0}>
           {displayThemes.map((item) => {
             const expanded = term ? !collapsedSearchThemes.has(item.id) : activeThemeId === item.id
@@ -977,6 +1019,8 @@ function SiteFooter() {
 export default function App() {
   const [heroAppearance, setHeroAppearance] = useState<HeroAppearance>("cards")
   const [pastHero, setPastHero] = useState(false)
+  const [footerInView, setFooterInView] = useState(false)
+  const [editingAnswer, setEditingAnswer] = useState(false)
   const [query, setQuery] = useState("")
   const [activeThemeId, setActiveThemeId] = useState<string | null>(cybersecurityThemes[0].id)
   const pendingThemeScroll = useRef<string | null>(null)
@@ -985,6 +1029,8 @@ export default function App() {
     const updateHeroPosition = () => {
       const hero = document.querySelector<HTMLElement>(".survey-hero")
       setPastHero(!hero || hero.getBoundingClientRect().bottom <= 0)
+      const footer = document.querySelector<HTMLElement>(".site-footer")
+      setFooterInView(Boolean(footer && footer.getBoundingClientRect().top <= window.innerHeight))
     }
     window.addEventListener("scroll", updateHeroPosition, { passive: true })
     window.addEventListener("resize", updateHeroPosition)
@@ -994,6 +1040,20 @@ export default function App() {
       window.removeEventListener("resize", updateHeroPosition)
     }
   }, [heroAppearance])
+
+  useEffect(() => {
+    const updateEditingState = () => {
+      const active = document.activeElement
+      setEditingAnswer(Boolean(active && active.closest("#questionnaire") && active.matches("input, textarea, select")))
+    }
+    const updateAfterBlur = () => window.requestAnimationFrame(updateEditingState)
+    document.addEventListener("focusin", updateEditingState)
+    document.addEventListener("focusout", updateAfterBlur)
+    return () => {
+      document.removeEventListener("focusin", updateEditingState)
+      document.removeEventListener("focusout", updateAfterBlur)
+    }
+  }, [])
 
   useLayoutEffect(() => {
     if (!activeThemeId || pendingThemeScroll.current !== activeThemeId) return
@@ -1025,6 +1085,7 @@ export default function App() {
           <ResearchThemeSidebar deferUntilHeroExit={heroAppearance === "minimal"} pastHero={pastHero} />
         </aside>
       </main>
+      <MobileActionDock visible={pastHero && !footerInView && !editingAnswer} query={query} onQueryChange={setQuery} />
       <SiteFooter />
     </div>
   )

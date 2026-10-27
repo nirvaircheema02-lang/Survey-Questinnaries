@@ -426,7 +426,6 @@ function MobileActionDock({ visible, searchOpen, query, onSearchOpenChange, onQu
         </div>
       ) : (
         <>
-          <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
           <div className="mobile-action-dock__actions">
             <button ref={searchTriggerRef} type="button" className="mobile-action-dock__search-trigger" aria-label="Search questionnaire" aria-controls="mobile-dock-search" aria-expanded={false} onClick={() => onSearchOpenChange(true)}>
               <Search aria-hidden="true" size={20} />

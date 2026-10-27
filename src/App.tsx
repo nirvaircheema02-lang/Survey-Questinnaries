@@ -330,6 +330,10 @@ function ConsultationCTA() {
         <PhoneCall aria-hidden="true" size={20} />
       </div>
       <h3>Need a tailored questionnaire?</h3>
+      <p>
+        Speak with our research team about adapting these questions to your
+        audience and study goals.
+      </p>
       <ConsultationButton />
     </aside>
   )
@@ -376,11 +380,14 @@ function MobileActionDock({ visible, query, onQueryChange }: {
           <button type="button" className="mobile-action-dock__close" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
         </div>
       ) : (
-        <div className="mobile-action-dock__actions">
-          <button ref={searchButtonRef} type="button" className="mobile-action-dock__search-button" aria-label="Search questions" aria-expanded={false} onClick={() => setSearchOpen(true)}>
-            <Search aria-hidden="true" size={20} />
-          </button>
-          <ConsultationButton compact />
+        <div className="mobile-action-dock__content">
+          <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
+          <div className="mobile-action-dock__actions">
+            <button ref={searchButtonRef} type="button" className="mobile-action-dock__search-button" aria-label="Search questions" aria-expanded={false} onClick={() => setSearchOpen(true)}>
+              <Search aria-hidden="true" size={20} />
+            </button>
+            <ConsultationButton compact />
+          </div>
         </div>
       )}
     </aside>

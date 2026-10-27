@@ -2057,6 +2057,20 @@ mark {
     transform: translateY(0);
   }
 
+  .mobile-action-dock__content {
+    width: 100%;
+  }
+
+  .mobile-action-dock__heading {
+    margin: 0 0 var(--space-2xs);
+    padding-inline: var(--space-2xs);
+    color: var(--black-900);
+    font-family: var(--font-sans-semibold);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-xs);
+  }
+
   .mobile-action-dock__actions,
   .mobile-action-dock__search {
     display: flex;

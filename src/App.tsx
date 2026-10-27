@@ -16,6 +16,7 @@ import {
   ListOrdered,
   Mail,
   MapPin,
+  Menu,
   Phone,
   PhoneCall,
   Search,
@@ -65,7 +66,28 @@ function Button({
   )
 }
 
-function SiteHeader() {
+function SiteHeader({ searchOpen, query, onSearchOpenChange, onQueryChange }: {
+  searchOpen: boolean
+  query: string
+  onSearchOpenChange: (open: boolean) => void
+  onQueryChange: (value: string) => void
+}) {
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const navSearchRef = useRef<HTMLAnchorElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (searchOpen) {
+      setMenuOpen(false)
+      searchInputRef.current?.focus()
+    }
+  }, [searchOpen])
+
+  const closeSearch = () => {
+    onSearchOpenChange(false)
+    window.requestAnimationFrame(() => navSearchRef.current?.focus())
+  }
+
   return (
     <>
       <div className="utility-bar">
@@ -84,6 +106,12 @@ function SiteHeader() {
       </div>
       <header className="site-header">
         <div className="page-container header-inner">
+          <button type="button" className="mobile-menu-trigger" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="mobile-nav-panel" onClick={() => {
+            onSearchOpenChange(false)
+            setMenuOpen((current) => !current)
+          }}>
+            {menuOpen ? <X aria-hidden="true" size={21} /> : <Menu aria-hidden="true" size={21} />}
+          </button>
           <a className="brand" href="#top" aria-label="Ken Research home">
             <img src="/assets/079cb.svg" alt="" />
             <img src="/assets/98552.svg" alt="Ken Research" />
@@ -95,12 +123,55 @@ function SiteHeader() {
                 <ChevronDown aria-hidden="true" size={13} />
               </a>
             ))}
-            <a className="nav-search" href="#questionnaire-search">
+            <a
+              ref={navSearchRef}
+              className="nav-search"
+              href="#questionnaire-search"
+              aria-expanded={searchOpen}
+              aria-controls="mobile-header-search"
+              onClick={(event) => {
+                if (!window.matchMedia("(max-width: 64rem)").matches) return
+                event.preventDefault()
+                onSearchOpenChange(!searchOpen)
+              }}
+            >
               Search
               <Search aria-hidden="true" size={15} />
             </a>
           </nav>
           <Button className="header-cta">Schedule a Demo</Button>
+        </div>
+        <nav className="mobile-nav-panel" id="mobile-nav-panel" aria-label="Mobile navigation" hidden={!menuOpen}>
+          {["Services", "Industries", "Resources"].map((item) => (
+            <a href={`#${item.toLowerCase()}`} key={item} onClick={() => setMenuOpen(false)}>{item}<ChevronRight aria-hidden="true" size={17} /></a>
+          ))}
+          <Button className="mobile-nav-panel__cta" onClick={() => setMenuOpen(false)}>Schedule a Demo</Button>
+        </nav>
+        <div className="mobile-header-search" id="mobile-header-search" hidden={!searchOpen} role="search">
+          <div className="page-container mobile-header-search__inner">
+            <Search aria-hidden="true" size={19} />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={query}
+              onChange={(event) => {
+                onQueryChange(event.target.value)
+                if (event.target.value.trim()) {
+                  window.requestAnimationFrame(() => document.getElementById("questionnaire")?.scrollIntoView({ block: "start" }))
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") closeSearch()
+              }}
+              placeholder="Search questions or answers"
+              aria-label="Search questions and answers across all tenets"
+            />
+            {query && <button type="button" aria-label="Clear search" onClick={() => {
+              onQueryChange("")
+              searchInputRef.current?.focus()
+            }}><X aria-hidden="true" size={17} /></button>}
+            <button type="button" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
+          </div>
         </div>
       </header>
     </>
@@ -339,57 +410,19 @@ function ConsultationCTA() {
   )
 }
 
-function MobileActionDock({ visible, query, onQueryChange }: {
+function MobileActionDock({ visible, onSearchOpen }: {
   visible: boolean
-  query: string
-  onQueryChange: (value: string) => void
+  onSearchOpen: () => void
 }) {
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const searchButtonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (searchOpen && visible) searchRef.current?.focus()
-  }, [searchOpen, visible])
-
-  useEffect(() => {
-    if (!visible) setSearchOpen(false)
-  }, [visible])
-
-  const closeSearch = () => {
-    setSearchOpen(false)
-    window.requestAnimationFrame(() => searchButtonRef.current?.focus())
-  }
-
   return (
-    <aside className="mobile-action-dock" data-visible={visible} data-search-open={searchOpen} aria-label="Questionnaire actions" inert={!visible}>
-      {searchOpen ? (
-        <div className="mobile-action-dock__search" role="search" onKeyDown={(event) => {
-          if (event.key === "Escape") closeSearch()
-        }}>
-          <Search aria-hidden="true" size={19} />
-          <input
-            ref={searchRef}
-            type="search"
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search questions or answers"
-            aria-label="Search questions and answers across all tenets"
-          />
-          {query && <button type="button" className="mobile-action-dock__clear" aria-label="Clear search" onClick={() => onQueryChange("")}><X aria-hidden="true" size={17} /></button>}
-          <button type="button" className="mobile-action-dock__close" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
-        </div>
-      ) : (
-        <div className="mobile-action-dock__content">
-          <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
-          <div className="mobile-action-dock__actions">
-            <button ref={searchButtonRef} type="button" className="mobile-action-dock__search-button" aria-label="Search questions" aria-expanded={false} onClick={() => setSearchOpen(true)}>
-              <Search aria-hidden="true" size={20} />
-            </button>
-            <ConsultationButton compact />
-          </div>
-        </div>
-      )}
+    <aside className="mobile-action-dock" data-visible={visible} aria-label="Questionnaire actions" inert={!visible}>
+      <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
+      <div className="mobile-action-dock__actions">
+        <button type="button" className="mobile-action-dock__search-trigger" aria-label="Search questionnaire" aria-controls="mobile-header-search" aria-expanded={false} onClick={onSearchOpen}>
+          <Search aria-hidden="true" size={20} />
+        </button>
+        <ConsultationButton compact />
+      </div>
     </aside>
   )
 }
@@ -1024,6 +1057,7 @@ export default function App() {
   const [pastHero, setPastHero] = useState(false)
   const [footerInView, setFooterInView] = useState(false)
   const [editingAnswer, setEditingAnswer] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [activeThemeId, setActiveThemeId] = useState<string | null>(cybersecurityThemes[0].id)
   const pendingThemeScroll = useRef<string | null>(null)
@@ -1042,7 +1076,7 @@ export default function App() {
       window.removeEventListener("scroll", updateHeroPosition)
       window.removeEventListener("resize", updateHeroPosition)
     }
-  }, [heroAppearance])
+  }, [heroAppearance, query])
 
   useEffect(() => {
     const updateEditingState = () => {
@@ -1075,7 +1109,7 @@ export default function App() {
 
   return (
     <div id="top">
-      <SiteHeader />
+      <SiteHeader searchOpen={mobileSearchOpen} query={query} onSearchOpenChange={setMobileSearchOpen} onQueryChange={setQuery} />
       <SurveyHero appearance={heroAppearance} onAppearanceChange={setHeroAppearance} />
       <main className={`page-container questionnaire-layout${heroAppearance === "cards" ? " questionnaire-layout--cards" : ""}`}>
         <ResearchThemeSection
@@ -1088,7 +1122,10 @@ export default function App() {
           <ResearchThemeSidebar deferUntilHeroExit={heroAppearance === "minimal"} pastHero={pastHero} />
         </aside>
       </main>
-      <MobileActionDock visible={pastHero && !footerInView && !editingAnswer} query={query} onQueryChange={setQuery} />
+      <MobileActionDock
+        visible={pastHero && !footerInView && !editingAnswer && !mobileSearchOpen}
+        onSearchOpen={() => setMobileSearchOpen(true)}
+      />
       <SiteFooter />
     </div>
   )

@@ -330,10 +330,6 @@ function ConsultationCTA() {
         <PhoneCall aria-hidden="true" size={20} />
       </div>
       <h3>Need a tailored questionnaire?</h3>
-      <p>
-        Speak with our research team about adapting these questions to your
-        audience and study goals.
-      </p>
       <ConsultationButton />
     </aside>
   )

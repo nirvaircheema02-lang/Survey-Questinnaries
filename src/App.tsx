@@ -259,7 +259,7 @@ function AnimatedArrow({
   )
 }
 
-function ConsultationButton() {
+function ConsultationButton({ compact = false }: { compact?: boolean }) {
   const [isHovering, setIsHovering] = useState(false)
   const [ripples, setRipples] = useState<CtaRipple[]>([])
   const buttonRef = useRef<HTMLAnchorElement>(null)
@@ -290,7 +290,7 @@ function ConsultationButton() {
   return (
     <a
       ref={buttonRef}
-      className="brand-consult-button"
+      className={`brand-consult-button${compact ? " brand-consult-button--compact" : ""}`}
       href="mailto:info@kenresearch.com?subject=Cybersecurity%20survey%20questionnaire"
       onClick={handleClick}
       onMouseEnter={() => setIsHovering(true)}
@@ -316,7 +316,7 @@ function ConsultationButton() {
         }`}
       />
       <span className="brand-consult-button__label">
-        Talk to a Survey Consultant
+        {compact ? "Talk to a consultant" : "Talk to a Survey Consultant"}
       </span>
       <AnimatedArrow isHovered={isHovering} />
     </a>
@@ -335,6 +335,15 @@ function ConsultationCTA() {
         audience and study goals.
       </p>
       <ConsultationButton />
+    </aside>
+  )
+}
+
+function MobileConsultationCTA() {
+  return (
+    <aside className="mobile-consultation-cta" aria-label="Survey consultation">
+      <p>Need a tailored questionnaire?</p>
+      <ConsultationButton compact />
     </aside>
   )
 }
@@ -481,29 +490,35 @@ function RankingAnswer({ options, questionId, query }: { options: string[]; ques
   }
 
   return (
-    <fieldset className="ranking-options">
-      <legend className="sr-only">Assign first, second, and third rank</legend>
-      {options.map((option) => (
-        <div className="ranking-option" key={option}>
-          <label htmlFor={`rank-${questionId}-${option}`}><Highlight text={option} query={query} /></label>
-          <div className="select-wrap">
-            <select
-              id={`rank-${questionId}-${option}`}
-              value={ranks[option] || ""}
-              onChange={(event) => updateRank(option, event.target.value)}
-              aria-label={`Rank ${option}`}
-            >
-              <option value="">Not ranked</option>
-              <option value="1">1 — Highest</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-            </select>
-            <ChevronDown aria-hidden="true" size={16} />
+    <>
+      <p className="mobile-ranking-hint">Tap a signal to set or change its rank.</p>
+      <fieldset className="ranking-options">
+        <legend className="sr-only">Assign first, second, and third rank</legend>
+        {options.map((option) => (
+          <div className="ranking-option" data-ranked={Boolean(ranks[option])} key={option}>
+            <label htmlFor={`rank-${questionId}-${option}`}><Highlight text={option} query={query} /></label>
+            <div className="select-wrap">
+              <span className="mobile-rank-display" aria-hidden="true">
+                {ranks[option] === "1" ? "Top choice" : ranks[option] === "2" ? "Second choice" : ranks[option] === "3" ? "Third choice" : "+ Rank"}
+              </span>
+              <select
+                id={`rank-${questionId}-${option}`}
+                value={ranks[option] || ""}
+                onChange={(event) => updateRank(option, event.target.value)}
+                aria-label={`Rank ${option}`}
+              >
+                <option value="">Not ranked</option>
+                <option value="1">1 — Highest</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+              <ChevronDown aria-hidden="true" size={16} />
+            </div>
           </div>
-        </div>
-      ))}
-      <p className="field-hint">Use each rank once. Rank 1 is the highest priority.</p>
-    </fieldset>
+        ))}
+        <p className="field-hint">Use each rank once. Rank 1 is the highest priority.</p>
+      </fieldset>
+    </>
   )
 }
 
@@ -849,6 +864,7 @@ function ResearchThemeSection({
           {resultCount} matching {resultCount === 1 ? "question" : "questions"} across {displayThemes.filter((item) => item.matches.length > 0).length} {displayThemes.filter((item) => item.matches.length > 0).length === 1 ? "tenet" : "tenets"}
         </p>
       )}
+      <MobileConsultationCTA />
         <div className="theme-accordion" hidden={resultCount === 0}>
           {displayThemes.map((item) => {
             const expanded = term ? !collapsedSearchThemes.has(item.id) : activeThemeId === item.id

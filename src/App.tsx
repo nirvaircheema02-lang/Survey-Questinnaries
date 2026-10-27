@@ -66,27 +66,17 @@ function Button({
   )
 }
 
-function SiteHeader({ searchOpen, query, onSearchOpenChange, onQueryChange }: {
+function SiteHeader({ searchOpen, onSearchOpenChange }: {
   searchOpen: boolean
-  query: string
   onSearchOpenChange: (open: boolean) => void
-  onQueryChange: (value: string) => void
 }) {
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const navSearchRef = useRef<HTMLAnchorElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (searchOpen) {
       setMenuOpen(false)
-      searchInputRef.current?.focus()
     }
   }, [searchOpen])
-
-  const closeSearch = () => {
-    onSearchOpenChange(false)
-    window.requestAnimationFrame(() => navSearchRef.current?.focus())
-  }
 
   return (
     <>
@@ -124,11 +114,10 @@ function SiteHeader({ searchOpen, query, onSearchOpenChange, onQueryChange }: {
               </a>
             ))}
             <a
-              ref={navSearchRef}
               className="nav-search"
               href="#questionnaire-search"
               aria-expanded={searchOpen}
-              aria-controls="mobile-header-search"
+              aria-controls="mobile-dock-search"
               onClick={(event) => {
                 if (!window.matchMedia("(max-width: 64rem)").matches) return
                 event.preventDefault()
@@ -147,32 +136,6 @@ function SiteHeader({ searchOpen, query, onSearchOpenChange, onQueryChange }: {
           ))}
           <Button className="mobile-nav-panel__cta" onClick={() => setMenuOpen(false)}>Schedule a Demo</Button>
         </nav>
-        <div className="mobile-header-search" id="mobile-header-search" hidden={!searchOpen} role="search">
-          <div className="page-container mobile-header-search__inner">
-            <Search aria-hidden="true" size={19} />
-            <input
-              ref={searchInputRef}
-              type="search"
-              value={query}
-              onChange={(event) => {
-                onQueryChange(event.target.value)
-                if (event.target.value.trim()) {
-                  window.requestAnimationFrame(() => document.getElementById("questionnaire")?.scrollIntoView({ block: "start" }))
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") closeSearch()
-              }}
-              placeholder="Search questions or answers"
-              aria-label="Search questions and answers across all tenets"
-            />
-            {query && <button type="button" aria-label="Clear search" onClick={() => {
-              onQueryChange("")
-              searchInputRef.current?.focus()
-            }}><X aria-hidden="true" size={17} /></button>}
-            <button type="button" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
-          </div>
-        </div>
       </header>
     </>
   )
@@ -410,19 +373,68 @@ function ConsultationCTA() {
   )
 }
 
-function MobileActionDock({ visible, onSearchOpen }: {
+function MobileActionDock({ visible, searchOpen, query, onSearchOpenChange, onQueryChange }: {
   visible: boolean
-  onSearchOpen: () => void
+  searchOpen: boolean
+  query: string
+  onSearchOpenChange: (open: boolean) => void
+  onQueryChange: (value: string) => void
 }) {
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchTriggerRef = useRef<HTMLButtonElement>(null)
+  const restoreTriggerFocus = useRef(false)
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus()
+    else if (restoreTriggerFocus.current) {
+      restoreTriggerFocus.current = false
+      searchTriggerRef.current?.focus()
+    }
+  }, [searchOpen])
+
+  const closeSearch = () => {
+    restoreTriggerFocus.current = true
+    onSearchOpenChange(false)
+  }
+
   return (
     <aside className="mobile-action-dock" data-visible={visible} aria-label="Questionnaire actions" inert={!visible}>
-      <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
-      <div className="mobile-action-dock__actions">
-        <button type="button" className="mobile-action-dock__search-trigger" aria-label="Search questionnaire" aria-controls="mobile-header-search" aria-expanded={false} onClick={onSearchOpen}>
-          <Search aria-hidden="true" size={20} />
-        </button>
-        <ConsultationButton compact />
-      </div>
+      {searchOpen ? (
+        <div className="mobile-action-dock__search" id="mobile-dock-search" role="search">
+          <Search aria-hidden="true" size={19} />
+          <input
+            ref={searchInputRef}
+            type="search"
+            value={query}
+            onChange={(event) => {
+              onQueryChange(event.target.value)
+              if (event.target.value.trim()) {
+                window.requestAnimationFrame(() => document.getElementById("questionnaire")?.scrollIntoView({ block: "start" }))
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") closeSearch()
+            }}
+            placeholder="Search questions or answers"
+            aria-label="Search questions and answers across all tenets"
+          />
+          {query && <button type="button" aria-label="Clear search" onClick={() => {
+            onQueryChange("")
+            searchInputRef.current?.focus()
+          }}><X aria-hidden="true" size={17} /></button>}
+          <button type="button" aria-label="Close search" onClick={closeSearch}><X aria-hidden="true" size={19} /></button>
+        </div>
+      ) : (
+        <>
+          <p className="mobile-action-dock__heading">Need a tailored questionnaire?</p>
+          <div className="mobile-action-dock__actions">
+            <button ref={searchTriggerRef} type="button" className="mobile-action-dock__search-trigger" aria-label="Search questionnaire" aria-controls="mobile-dock-search" aria-expanded={false} onClick={() => onSearchOpenChange(true)}>
+              <Search aria-hidden="true" size={20} />
+            </button>
+            <ConsultationButton compact />
+          </div>
+        </>
+      )}
     </aside>
   )
 }
@@ -1109,7 +1121,7 @@ export default function App() {
 
   return (
     <div id="top">
-      <SiteHeader searchOpen={mobileSearchOpen} query={query} onSearchOpenChange={setMobileSearchOpen} onQueryChange={setQuery} />
+      <SiteHeader searchOpen={mobileSearchOpen} onSearchOpenChange={setMobileSearchOpen} />
       <SurveyHero appearance={heroAppearance} onAppearanceChange={setHeroAppearance} />
       <main className={`page-container questionnaire-layout${heroAppearance === "cards" ? " questionnaire-layout--cards" : ""}`}>
         <ResearchThemeSection
@@ -1123,8 +1135,11 @@ export default function App() {
         </aside>
       </main>
       <MobileActionDock
-        visible={pastHero && !footerInView && !editingAnswer && !mobileSearchOpen}
-        onSearchOpen={() => setMobileSearchOpen(true)}
+        visible={!editingAnswer && (mobileSearchOpen || (pastHero && !footerInView))}
+        searchOpen={mobileSearchOpen}
+        query={query}
+        onSearchOpenChange={setMobileSearchOpen}
+        onQueryChange={setQuery}
       />
       <SiteFooter />
     </div>

@@ -350,7 +350,7 @@ function ConsultationButton({ compact = false }: { compact?: boolean }) {
         }`}
       />
       <span className="brand-consult-button__label">
-        {compact ? "Talk to a consultant" : "Talk to a Survey Consultant"}
+        Talk to a survey consultant
       </span>
       <AnimatedArrow isHovered={isHovering} />
     </a>

@@ -1880,6 +1880,8 @@ mark {
 }
 
 .empty-state svg {
+  display: block;
+  margin-inline: auto;
   color: var(--black-500);
 }
 

@@ -570,14 +570,14 @@ function RankingAnswer({ options, questionId, query }: { options: string[]; ques
 
   return (
     <>
-      <p className="mobile-ranking-hint">Tap a signal to set or change its rank.</p>
+      <p className="ranking-hint">Choose up to three signals and give each a unique rank. Rank 1 is highest.</p>
       <fieldset className="ranking-options">
         <legend className="sr-only">Assign first, second, and third rank</legend>
         {options.map((option) => (
           <div className="ranking-option" data-ranked={Boolean(ranks[option])} key={option}>
             <label htmlFor={`rank-${questionId}-${option}`}><Highlight text={option} query={query} /></label>
             <div className="select-wrap">
-              <span className="mobile-rank-display" aria-hidden="true">
+              <span className="rank-display" aria-hidden="true">
                 {ranks[option] === "1" ? "Top choice" : ranks[option] === "2" ? "Second choice" : ranks[option] === "3" ? "Third choice" : "+ Rank"}
               </span>
               <select
